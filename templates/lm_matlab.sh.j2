@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+
+USAGE="
+License manager
+
+USAGE
+    Query the host ID:
+
+    lm_matlab hostid
+
+    Query license manager status:
+
+    lm_matlab status
+
+    Reload the license manager:
+
+    lm_matlab reload
+
+    Start the license manager:
+
+    lm_matlab start
+
+    Stop the license manager:
+
+    lm_matlab stop
+"
+
+# License file
+LICENSE="{{ license_file }}"
+
+# Log file
+LOG="{{ log_file }}"
+
+# License manager utility
+LMUTIL="{{ dir_lm }}/etc/glnxa64/lmutil"
+
+# License manager daemon
+LMGRD="{{ dir_lm }}/etc/glnxa64/lmgrd"
+
+# Vendor daemon
+MLM="{{ dir_lm }}/etc/glnxa64/MLM"
+
+lm_hostid() {
+    "$LMUTIL" lmhostid -n
+}
+
+lm_status() {
+    "$LMUTIL" lmstat -a -c "$LICENSE"
+}
+
+lm_reload() {
+    "$LMUTIL" lmreread -c "$LICENSE" -vendor MLM
+}
+
+lm_start() {
+    "$LMGRD" -c "$LICENSE" -l "+$LOG" -2 -p lmdown
+}
+
+lm_stop() {
+    kill -9 "$(pidof "$LMGRD")" "$(pidof "$MLM")"
+}
+
+case $1 in
+    hostid)
+        lm_hostid
+        ;;
+    status)
+        lm_status
+        ;;
+    reload)
+        lm_reload
+        ;;
+    start)
+        lm_start
+        ;;
+    stop)
+        lm_stop
+        ;;
+    help|-h|--help)
+        echo "$USAGE"
+        exit 0
+        ;;
+    *)
+        echo "$USAGE" >&2
+        exit 1 ;;
+esac

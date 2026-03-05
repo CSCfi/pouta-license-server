@@ -1,0 +1,166 @@
+heat_template_version: "2015-10-15"
+
+description: >
+  Virtual machine for running a custom License Server.
+
+parameters:
+  image_name:
+    type: string
+    description: Name of the image to use for the instance
+    default: ubuntu-24.04
+
+  flavor_name:
+    type: string
+    description: Flavor (size) of the instance
+    default: standard.tiny
+
+  key_name:
+    type: string
+    description: Name of the SSH key pair
+    default: keypair-license-server
+
+  external_network:
+    type: string
+    description: Name of the external network
+    default: public
+
+  ssh_allowed_cidrs:
+    type: comma_delimited_list
+    description: List of CIDRs allowed to connect via SSH
+    default: "0.0.0.0/32"  # default blocks all connections
+
+resources:
+  # Network
+  license_server_network:
+    type: OS::Neutron::Net
+
+  # Subnet
+  license_server_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: license_server_network }
+      allocation_pools:
+        - end: "192.168.113.200"
+          start: "192.168.113.10"
+      cidr: "192.168.113.0/24"
+      ip_version: 4
+      dns_nameservers:
+        - "193.166.4.24"
+        - "193.166.4.25"
+
+  # Router
+  license_server_router:
+    type: OS::Neutron::Router
+    properties:
+      external_gateway_info:
+        network: { get_param: external_network }
+
+  # Router Interface
+  license_server_router_interface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router: { get_resource: license_server_router }
+      subnet: { get_resource: license_server_subnet }
+
+  # Security Group for SSH
+  license_server_security_group_ssh:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      rules:
+        repeat:
+          for_each:
+            <%cidr%>: { get_param: ssh_allowed_cidrs }
+          template:
+            port_range_min: 22
+            port_range_max: 22
+            protocol: "tcp"
+            remote_ip_prefix: "<%cidr%>"
+
+  # Security group for license queries
+  license_server_security_group_license_manager:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      rules:
+        repeat:
+          for_each:
+            <%cidr%>:
+              # Puhti
+              - 86.50.164.181/32
+              - 86.50.164.182/32
+              - 86.50.164.183/32
+              - 86.50.164.184/32
+              - 86.50.164.185/32
+              - 86.50.164.177/32
+              - 86.50.164.178/32
+              # Mahti
+              - 86.50.165.211/32
+              - 86.50.165.212/32
+              - 86.50.165.213/32
+              - 86.50.165.214/32
+              - 86.50.165.215/32
+              - 86.50.165.201/32
+              - 86.50.165.202/32
+              # LUMI
+              - 193.167.209.163/32
+              - 193.167.209.164/32
+              - 193.167.209.165/32
+              - 193.167.209.166/32
+              - 193.167.209.169/32
+              - 193.167.209.170/32
+              - 193.167.209.171/32
+          template:
+            port_range_min: 27000
+            port_range_max: 27001
+            protocol: "tcp"
+            remote_ip_prefix: "<%cidr%>"
+
+  # Port
+  license_server_port:
+    type: OS::Neutron::Port
+    properties:
+      network: { get_resource: license_server_network }
+      security_groups:
+        - { get_resource: license_server_security_group_ssh }
+        - { get_resource: license_server_security_group_license_manager }
+      fixed_ips:
+        - subnet_id: { get_resource: license_server_subnet }
+
+  # Floating IP
+  license_server_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: { get_param: external_network }
+      port_id: { get_resource: license_server_port }
+
+  # VM Instance
+  license_server_instance:
+    type: OS::Nova::Server
+    properties:
+      image: { get_param: image_name }
+      flavor: { get_param: flavor_name }
+      key_name: { get_param: key_name }
+      networks:
+        - port: { get_resource: license_server_port }
+      user_data: |
+        #!/bin/bash
+        # Firewall openings
+        iptables -A INPUT -p tcp --dport 27000 -j ACCEPT
+        iptables -A INPUT -p tcp --dport 27001 -j ACCEPT
+        # Install packages
+        apt-get update -y
+        apt-get upgrade -y
+        apt-get install -y python3
+        apt-get install -y unzip
+
+outputs:
+  instance_ip:
+    description: Private IP address of the instance
+    value: { get_attr: [license_server_instance, first_address] }
+
+  floating_ip_address:
+    description: Floating IP address of the instance
+    value: { get_attr: [license_server_floating_ip, floating_ip_address] }
+
+  instance_id:
+    description: ID of the created instance
+    value: { get_resource: license_server_instance }

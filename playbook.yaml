@@ -1,0 +1,129 @@
+- name: "Create license manager user and group"
+  hosts:
+    - pouta_license_server
+  become: true
+
+  tasks:
+    - name: Create group lmadmin
+      ansible.builtin.group:
+        name: lmadmin
+        state: present
+
+    - name: Create user lmmatlab
+      ansible.builtin.user:
+        name: lmmatlab
+        group: lmadmin
+        state: present
+
+    - name: "Create non-standard tmp location for legacy FlexLM"
+      ansible.builtin.file:
+        src: /tmp
+        dest: /usr/tmp
+        state: link
+
+    - name: "Create license directory"
+      ansible.builtin.file:
+        path: "/license"
+        state: directory
+        mode: "u=rwx,go=rx"
+
+    - name: "Create license manager directory"
+      ansible.builtin.file:
+        path: "{{ dir_lm }}"
+        state: directory
+        mode: "u=rwx,go=rx"
+        owner: lmmatlab
+        group: lmadmin
+
+    - name: "Download matlab license manager"
+      ansible.builtin.get_url:
+        url: "{{ download_url }}"
+        dest: "{{ dir_lm }}/mlm.zip"
+        checksum: "{{ download_checksum }}"
+        mode: "u=rw,go=r"
+        owner: lmmatlab
+        group: lmadmin
+
+    - name: "Extract the archive"
+      ansible.builtin.unarchive:
+        src: "{{ dir_lm }}/mlm.zip"
+        dest: "{{ dir_lm }}"
+        remote_src: true
+        mode: "u=rwX,go=rX"
+        owner: lmmatlab
+        group: lmadmin
+
+    - name: "Install license manager script"
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/templates/lm_matlab.sh.j2"
+        dest: "{{ dir_lm }}/lm_matlab.sh"
+        mode: "u=rwx,go=rx"
+        owner: lmmatlab
+        group: lmadmin
+
+    - name: "Create license file directory"
+      ansible.builtin.file:
+        path: "{{ dir_license }}"
+        state: directory
+        mode: "u=rwx,go=rx"
+        owner: lmmatlab
+        group: lmadmin
+
+    - name: "Retrieve hostid used by license.lic.j2"
+      command: '"{{ dir_lm }}/lm_matlab.sh" hostid'
+      register: hostid
+
+    - name: "Print hostid"
+      ansible.builtin.debug:
+        msg: "hostid: {{ hostid.stdout }}"
+
+    - name: "Install license file"
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/templates/license.lic.j2"
+        dest: "{{ license_file }}"
+        mode: "u=rw,go=r"
+        owner: lmmatlab
+        group: lmadmin
+
+    - name: "Install options file"
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/templates/license.opt.j2"
+        dest: "{{ options_file }}"
+        mode: "u=rw,go=r"
+        owner: lmmatlab
+        group: lmadmin
+
+    - name: "Touch log file without modifying it"
+      ansible.builtin.file:
+        path: "{{ log_file }}"
+        state: "touch"
+        mode: "u=rw,go=r"
+        modification_time: "preserve"
+        access_time: "preserve"
+        owner: lmmatlab
+        group: lmadmin
+
+    - name: "Create systemd service"
+      ansible.builtin.copy:
+        content: |
+          [Unit]
+          Description=MATLAB License Service
+          After=network.target
+
+          [Service]
+          Type=forking
+          User=lmmatlab
+          ExecStart={{ dir_lm}}/lm_matlab.sh start
+          Restart=on-failure
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: "/etc/systemd/system/lm_matlab.service"
+        mode: "u=rw,g=r,o=r"
+
+    - name: "Reload changes, then enable and start service"
+      ansible.builtin.systemd:
+        name: "lm_matlab"
+        state: "started"
+        enabled: true
+        daemon_reload: true

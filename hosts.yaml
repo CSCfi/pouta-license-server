@@ -1,0 +1,18 @@
+pouta_license_server:
+  hosts:
+    vm:
+      ansible_host: "<floating-ip>"
+      ansible_user: ubuntu
+      ansible_ssh_private_key_file: ~/.ssh/id_rsa_licence_server
+      ansible_python_interpreter: /usr/bin/python3
+      ansible_connection: ssh
+  vars:
+    download_url: "https://ssd.mathworks.com/supportfiles/downloads/R2025b/license_manager/R2025b/daemons/glnxa64/mathworks_network_license_manager_glnxa64.zip"
+    download_checksum: "sha256:b9f095de71f91da6baf70f8afb3006edbf3bb014a2f849ea513bc70f7211773f"
+    dir_lm: "/license/matlab/mlm/R2025b"
+    dir_license: "/license/matlab"
+    license_file: "/license/matlab/license.lic"
+    options_file: "/license/matlab/license.opt"
+    log_file: "/license/matlab/license.log"
+    license_server_port: 27000
+    license_manager_port: 27001
