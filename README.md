@@ -98,7 +98,7 @@ After the configuration completes, you need to activate your MATLAB license:
    Print the hostid and copy it:
 
    ```bash
-   /license/matlab/mlm/R2025b/lm_matlab.sh hostid
+   /license/matlab/mlm/R2025b/lm_hostid
    ```
 
 2. Go to the [MATLAB License Center](https://www.mathworks.com/licensecenter/)

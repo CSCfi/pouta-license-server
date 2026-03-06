@@ -112,7 +112,7 @@
         group: lmadmin
 
     - name: "Retrieve hostid used by license.lic.j2"
-      command: '"{{ dir_lm }}/lm_matlab.sh" hostid'
+      command: '"{{ dir_lm }}/lm_hostid"'
       register: hostid
 
     - name: "Print hostid"
@@ -162,7 +162,7 @@
           [Service]
           Type=forking
           User=lmmatlab
-          ExecStart={{ dir_lm}}/lm_matlab.sh start
+          ExecStart={{ dir_lm}}/lm_start
           Restart=on-failure
 
           [Install]
