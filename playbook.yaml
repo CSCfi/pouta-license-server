@@ -2,6 +2,10 @@
   hosts:
     - pouta_license_server
   become: true
+  vars:
+    license_file: "{{ dir_license }}/license.lic"
+    options_file: "{{ dir_license }}/license.opt"
+    log_file: "{{ dir_license }}/license.log"
 
   tasks:
     - name: Create group lmadmin
@@ -29,11 +33,14 @@
 
     - name: "Create license manager directory"
       ansible.builtin.file:
-        path: "{{ dir_lm }}"
+        path: "{{ item }}"
         state: directory
         mode: "u=rwx,go=rx"
         owner: lmmatlab
         group: lmadmin
+      loop:
+        - "{{ dir_lm }}"
+        - "{{ dir_lm }}/bin"
 
     - name: "Download matlab license manager"
       ansible.builtin.get_url:
@@ -58,7 +65,7 @@
         content: |
           #!/usr/bin/env bash
           {{ dir_lm }}/etc/glnxa64/lmutil lmhostid -n
-        dest: "{{ dir_lm }}/lm_hostid"
+        dest: "{{ dir_lm }}/bin/lm_hostid"
         mode: "u=rwx,go=rx"
         owner: lmmatlab
         group: lmadmin
@@ -68,7 +75,7 @@
         content: |
           #!/usr/bin/env bash
           {{ dir_lm }}/etc/glnxa64/lmutil lmstat -a -c "{{ license_file }}"
-        dest: "{{ dir_lm }}/lm_status"
+        dest: "{{ dir_lm }}/bin/lm_status"
         mode: "u=rwx,go=rx"
         owner: lmmatlab
         group: lmadmin
@@ -78,7 +85,7 @@
         content: |
           #!/usr/bin/env bash
           {{ dir_lm }}/etc/glnxa64/lmutil lmreread -c "{{ license_file }}" -vendor MLM
-        dest: "{{ dir_lm }}/lm_reload"
+        dest: "{{ dir_lm }}/bin/lm_reload"
         mode: "u=rwx,go=rx"
         owner: lmmatlab
         group: lmadmin
@@ -88,7 +95,7 @@
         content: |
           #!/usr/bin/env bash
           {{ dir_lm }}/etc/glnxa64/lmgrd -c "{{ license_file }}" -l "+{{ log_file }}" -2 -p lmdown
-        dest: "{{ dir_lm }}/lm_start"
+        dest: "{{ dir_lm }}/bin/lm_start"
         mode: "u=rwx,go=rx"
         owner: lmmatlab
         group: lmadmin
@@ -98,7 +105,7 @@
         content: |
           #!/usr/bin/env bash
           kill -9 "$(pidof "{{ dir_lm }}/etc/glnxa64/lmgrd")" "$(pidof "{{ dir_lm }}/etc/glnxa64/MLM")"
-        dest: "{{ dir_lm }}/lm_stop"
+        dest: "{{ dir_lm }}/bin/lm_stop"
         mode: "u=rwx,go=rx"
         owner: lmmatlab
         group: lmadmin
@@ -112,7 +119,7 @@
         group: lmadmin
 
     - name: "Retrieve hostid used by license.lic.j2"
-      command: '"{{ dir_lm }}/lm_hostid"'
+      command: '"{{ dir_lm }}/bin/lm_hostid"'
       register: hostid
 
     - name: "Print hostid"
@@ -162,7 +169,7 @@
           [Service]
           Type=forking
           User=lmmatlab
-          ExecStart={{ dir_lm}}/lm_start
+          ExecStart={{ dir_lm}}/bin/lm_start
           Restart=on-failure
 
           [Install]
