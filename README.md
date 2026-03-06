@@ -114,7 +114,13 @@ After the configuration completes, you need to activate your MATLAB license:
 5. On the server, append the license contents to the license file on the server:
 
    ```bash
-   sudo -u lmmatlab vi /license/matlab/license.lic
+   sudo -u lmmatlab vi /license/matlab/files/license.lic
+   ```
+
+6. Modify the options file to allows desired users to use the license server:
+
+   ```bash
+   sudo -u lmmatlab vi /license/matlab/files/license.opt
    ```
 
 ## Usage

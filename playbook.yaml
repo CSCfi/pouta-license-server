@@ -14,17 +14,6 @@
     license_manager_port: 27001
 
   tasks:
-    - name: Create group lmadmin
-      ansible.builtin.group:
-        name: lmadmin
-        state: present
-
-    - name: Create user lmmatlab
-      ansible.builtin.user:
-        name: lmmatlab
-        group: lmadmin
-        state: present
-
     - name: "Create non-standard tmp location for legacy FlexLM"
       ansible.builtin.file:
         src: /tmp
@@ -36,6 +25,17 @@
         path: "/license"
         state: directory
         mode: "u=rwx,go=rx"
+
+    - name: Create group lmadmin
+      ansible.builtin.group:
+        name: lmadmin
+        state: present
+
+    - name: Create user lmmatlab
+      ansible.builtin.user:
+        name: lmmatlab
+        group: lmadmin
+        state: present
 
     - name: "Create license manager directory"
       ansible.builtin.file:
