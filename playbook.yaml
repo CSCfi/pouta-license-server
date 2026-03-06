@@ -53,10 +53,47 @@
         owner: lmmatlab
         group: lmadmin
 
-    - name: "Install license manager script"
-      ansible.builtin.template:
-        src: "{{ playbook_dir }}/templates/lm_matlab.sh.j2"
-        dest: "{{ dir_lm }}/lm_matlab.sh"
+    - name: "lm_hostid command"
+      ansible.builtin.copy:
+        content: |
+          {{ dir_lm }}/etc/glnxa64/lmutil lmhostid -n
+        dest: "{{ dir_lm }}/lm_hostid"
+        mode: "u=rwx,go=rx"
+        owner: lmmatlab
+        group: lmadmin
+
+    - name: "lm_status command"
+      ansible.builtin.copy:
+        content: |
+          {{ dir_lm }}/etc/glnxa64/lmutil lmstat -a -c "{{ license_file }}"
+        dest: "{{ dir_lm }}/lm_status"
+        mode: "u=rwx,go=rx"
+        owner: lmmatlab
+        group: lmadmin
+
+    - name: "lm_reload command"
+      ansible.builtin.copy:
+        content: |
+          {{ dir_lm }}/etc/glnxa64/lmutil lmreread -c "{{ license_file }}" -vendor MLM
+        dest: "{{ dir_lm }}/lm_reload"
+        mode: "u=rwx,go=rx"
+        owner: lmmatlab
+        group: lmadmin
+
+    - name: "lm_start command"
+      ansible.builtin.copy:
+        content: |
+          {{ dir_lm }}/etc/glnxa64/lmgrd -c "{{ license_file }}" -l "+{{ log_file }}" -2 -p lmdown
+        dest: "{{ dir_lm }}/lm_start"
+        mode: "u=rwx,go=rx"
+        owner: lmmatlab
+        group: lmadmin
+
+    - name: "lm_stop command"
+      ansible.builtin.copy:
+        content: |
+          kill -9 "$(pidof "{{ dir_lm }}/etc/glnxa64/lmgrd")" "$(pidof "{{ dir_lm }}/etc/glnxa64/MLM")"
+        dest: "{{ dir_lm }}/lm_stop"
         mode: "u=rwx,go=rx"
         owner: lmmatlab
         group: lmadmin
@@ -78,16 +115,23 @@
         msg: "hostid: {{ hostid.stdout }}"
 
     - name: "Install license file"
-      ansible.builtin.template:
-        src: "{{ playbook_dir }}/templates/license.lic.j2"
+      ansible.builtin.copy:
+        contents: |
+          SERVER this_host {{ hostid.stdout }} {{ license_server_port }}
+          VENDOR MLM {{ dir_lm }}/etc/glnxa64/MLM {{ options_file }} port={{ license_manager_port }}
+          # MATLAB license contents
         dest: "{{ license_file }}"
         mode: "u=rw,go=r"
         owner: lmmatlab
         group: lmadmin
 
     - name: "Install options file"
-      ansible.builtin.template:
-        src: "{{ playbook_dir }}/templates/license.opt.j2"
+      ansible.builtin.copy:
+        content: |
+          # Allow specific users to use the license.
+          INCLUDEALL USER nobody
+          # Disallow anyony else but the allowed users from using the licese.
+          EXCLUDEALL USER_GROUP EVERYONE
         dest: "{{ options_file }}"
         mode: "u=rw,go=r"
         owner: lmmatlab
