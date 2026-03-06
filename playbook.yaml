@@ -14,6 +14,19 @@
     license_manager_port: 27001
 
   tasks:
+    - name: "Upgrade all packages"
+      ansible.builtin.apt:
+        upgrade: yes
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: "Install unzip"
+      ansible.builtin.apt:
+        name:
+          - unzip
+        state: present
+        install_recommends: no
+
     - name: "Create non-standard tmp location for legacy FlexLM"
       ansible.builtin.file:
         src: /tmp
