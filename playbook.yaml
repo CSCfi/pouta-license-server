@@ -27,6 +27,17 @@
         state: present
         install_recommends: no
 
+    - name: "Firewall config"
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: "{{ item }}"
+        jump: ACCEPT
+        state: present
+      loop:
+        - 27000
+        - 27001
+
     - name: "Create non-standard tmp location for legacy FlexLM"
       ansible.builtin.file:
         src: /tmp

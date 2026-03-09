@@ -141,11 +141,6 @@ resources:
       key_name: { get_param: key_name }
       networks:
         - port: { get_resource: license_server_port }
-      user_data: |
-        #!/bin/bash
-        # Firewall openings
-        iptables -A INPUT -p tcp --dport 27000 -j ACCEPT
-        iptables -A INPUT -p tcp --dport 27001 -j ACCEPT
 
 outputs:
   instance_ip:
