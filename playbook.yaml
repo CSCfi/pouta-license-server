@@ -3,9 +3,9 @@
     - pouta_license_server
   become: true
   vars:
-    download_url: "https://ssd.mathworks.com/supportfiles/downloads/R2025b/license_manager/R2025b/daemons/glnxa64/mathworks_network_license_manager_glnxa64.zip"
-    download_checksum: "sha256:b9f095de71f91da6baf70f8afb3006edbf3bb014a2f849ea513bc70f7211773f"
-    dir_lm: "/license/matlab/lm/R2025b"
+    download_url: "https://ssd.mathworks.com/supportfiles/downloads/R2026a/license_manager/R2026a/daemons/glnxa64/mathworks_network_license_manager_glnxa64.zip"
+    download_checksum: "sha256:2c93c8a9c511f25a5ab1ffef4549243f26e7290f797ef9f4a4c6630cdb3ceddf"
+    dir_lm: "/license/matlab/lm/R2026a"
     dir_license: "/license/matlab/files"
     license_file: "{{ dir_license }}/license.lic"
     options_file: "{{ dir_license }}/license.opt"
