@@ -166,6 +166,7 @@
         mode: "u=rw,go=r"
         owner: lmmatlab
         group: lmadmin
+        backup: yes
 
     - name: "Install options file"
       ansible.builtin.copy:
@@ -178,6 +179,7 @@
         mode: "u=rw,go=r"
         owner: lmmatlab
         group: lmadmin
+        backup: yes
 
     - name: "Touch log file without modifying it"
       ansible.builtin.file:
