@@ -58,10 +58,11 @@ The key is saved as `~/.ssh/id_rsa_license_server`.
 
 ### 4. Create the Virtual Machine
 
-Deploy the VM using OpenStack Heat with CIRDs for allowed SSH connections as comma separated list:
+Deploy the VM using OpenStack Heat with CIRDs for allowed SSH connections as comma separated list.
+The following examples allows CSC's IP addresses:
 
 ```bash
-./02_create_vm.sh "0.0.0.0/32,0.0.0.0/32"
+./02_create_vm.sh "193.166.1.0/24,193.166.2.0/24,193.166.80.0/23,193.166.86.0/24,193.166.83.192/28"
 ```
 
 Verify the stack was created successfully:
@@ -76,9 +77,15 @@ To retrieve the floating IP address assigned to your VM:
 openstack stack show license-server -f json | jq -r '.outputs[] | select(.output_key=="floating_ip_address") | .output_value'
 ```
 
+Test SSH connection into the VM:
+
+```bash
+ssh -i ~/.ssh/id_rsa_license_server ubuntu@<floating-ip>
+```
+
 ### 5. Configure the License Server
 
-Run Ansible to install and configure MATLAB license server software:
+Modify floating ip in `hosts.yaml` and run Ansible to install and configure MATLAB license server software:
 
 ```bash
 ./03_configure_vm.sh
