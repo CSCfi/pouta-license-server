@@ -51,10 +51,14 @@ This installs Ansible and the OpenStack SDK.
 Generate an SSH key pair for accessing the VM:
 
 ```bash
-./01_create_ssh_key.sh
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa_license_server
 ```
 
-The key is saved as `~/.ssh/id_rsa_license_server`.
+Add the SSH key to OpenStack:
+
+```bash
+openstack keypair create --public-key ~/.ssh/id_rsa_license_server.pub keypair-license-server
+```
 
 ### 4. Create the Virtual Machine
 
