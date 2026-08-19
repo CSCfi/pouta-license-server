@@ -66,7 +66,7 @@ Deploy the VM using OpenStack Heat with CIRDs for allowed SSH connections as com
 The following examples allows CSC's IP addresses:
 
 ```bash
-./02_create_vm.sh "193.166.1.0/24,193.166.2.0/24,193.166.80.0/23,193.166.86.0/24,193.166.83.192/28"
+openstack stack create --template stack.yaml license-server --parameter ssh_allowed_cidrs="193.166.1.0/24,193.166.2.0/24,193.166.80.0/23,193.166.86.0/24,193.166.83.192/28"
 ```
 
 Verify the stack was created successfully:
@@ -92,7 +92,7 @@ ssh -i ~/.ssh/id_rsa_license_server ubuntu@<floating-ip>
 Modify floating ip in `hosts.yaml` and run Ansible to install and configure MATLAB license server software:
 
 ```bash
-./03_configure_vm.sh
+ansible-playbook -i hosts.yaml -l pouta_license_server playbook.yaml
 ```
 
 This script connects to the VM and sets up the license server components.

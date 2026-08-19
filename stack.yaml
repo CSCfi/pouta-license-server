@@ -27,7 +27,9 @@ parameters:
   ssh_allowed_cidrs:
     type: comma_delimited_list
     description: List of CIDRs allowed to connect via SSH
-    default: "0.0.0.0/32"  # default blocks all connections
+    # Default value blocks all connections.
+    # Set these via `--parameters ssh_allowed_cidrs=<cidrs>`
+    default: "0.0.0.0/32"
 
 resources:
   # Network
