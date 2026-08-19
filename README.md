@@ -19,7 +19,7 @@ Follow the [CSC Pouta documentation](https://docs.csc.fi/cloud/pouta/install-cli
 Source your project credentials:
 
 ```bash
-. <project_name_here>-openrc.sh
+. <project>-openrc.sh
 ```
 
 This loads your OpenStack credentials into the current shell session.
@@ -66,7 +66,8 @@ Deploy the VM using OpenStack Heat with CIRDs for allowed SSH connections as com
 The following examples allows CSC's IP addresses:
 
 ```bash
-openstack stack create --template stack.yaml license-server --parameter ssh_allowed_cidrs="193.166.1.0/24,193.166.2.0/24,193.166.80.0/23,193.166.86.0/24,193.166.83.192/28"
+SSH_CIDRS="193.166.1.0/24,193.166.2.0/24,193.166.80.0/23,193.166.86.0/24,193.166.83.192/28"
+openstack stack create --template stack.yaml license-server --parameter ssh_allowed_cidrs="$SSH_CIDRS"
 ```
 
 Verify the stack was created successfully:
